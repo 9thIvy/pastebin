@@ -1,5 +1,26 @@
+use rocket::{fairing::{Fairing, Info, Kind}, Build, Rocket, Orbit};
 use std::{fs, path::PathBuf, time::SystemTime};
 use tokio::time::{self, Duration};
+use tokio::task;
+
+
+pub struct Janitor;
+#[rocket::async_trait]
+impl Fairing for Janitor{
+    fn info(&self) -> Info{
+        Info{
+            name: "Remove old files",
+            kind: Kind::Liftoff
+        }
+    }
+
+    async fn on_liftoff(&self, _rocket: &Rocket<Orbit>){
+        task::spawn(async {
+            rm_old_files().await;
+        });
+    }
+}
+
 
 fn too_old(p: &std::path::PathBuf, now: u64) -> bool {
     let metadata = match fs::metadata(p) {
@@ -39,19 +60,24 @@ fn find_files() -> std::io::Result<Vec<std::path::PathBuf>> {
     Ok(old_files)
 }
 pub async fn rm_old_files() {
+    let mut interval = time::interval(Duration::from_hours(1));
     loop{
-        let mut interval = time::interval(Duration::from_hours(1));
         interval.tick().await;
-    
-        let paths = match find_files(){
+
+        let paths: Vec<PathBuf> = match task::spawn_blocking(||{
+            match find_files(){
+                Ok(p) => p,
+                Err(e) => panic!("find_files error:\n{}",e)
+            }
+        }).await{
             Ok(p) => p,
-            Err(e) => panic!("in find_files() called by rm_old_files: {}",e)
+            Err(e) => panic!("blocking task panicked: {}",e),
         };
-        
+
         for path in paths{
-            match fs::remove_file(path){
+            match tokio::fs::remove_file(path).await{
                 Ok(_) => (),
-                Err(e) => eprintln!("can not remove file!\n{}",e),
+                Err(e) => eprintln!("cant remove file\n{}",e)
             }
         }
     }

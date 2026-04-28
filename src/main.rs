@@ -5,10 +5,14 @@ use paste_id::PasteId;
 use rocket::tokio::fs::File;
 use rocket::data::{Data, ToByteUnit};
 
+
+
+
 #[launch]
 fn rocket() -> _ {
-    janitor::rm_old_files();
-    rocket::build().mount("/", routes![index, retrieve, upload])
+    rocket::build()
+        .attach(janitor::Janitor)
+        .mount("/", routes![index, retrieve, upload])
 }
 
 #[get("/")]
