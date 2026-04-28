@@ -45,7 +45,7 @@ fn too_old(p: &std::path::PathBuf, now: u64) -> bool {
 }
 
 fn find_files() -> std::io::Result<Vec<std::path::PathBuf>> {
-    let paths = fs::read_dir("./")?
+    let paths = fs::read_dir("./upload")?
         .map(|res| res.map(|p| p.path()))
         .collect::<Result<Vec<_>, std::io::Error>>()?;
 
