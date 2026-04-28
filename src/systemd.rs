@@ -1,5 +1,6 @@
-use systemd::daemon::notify;
 use rocket::{fairing::{Fairing, Info, Kind}, Rocket, Orbit};
+
+use libsystemd::daemon::{self, NotifyState};
 
 pub struct Sysd;
 #[rocket::async_trait]
@@ -12,10 +13,11 @@ impl Fairing for Sysd{
     }
     
     async fn on_liftoff(&self, _rocket: &Rocket<Orbit>){
-        match notify(true, [("READY", "1")].iter()){
-            Ok(n) => n,
+        let sent = daemon::notify(true, &[NotifyState::Ready]);
+        match sent{
+            Ok(s) => s,
             Err(e) => {
-                eprintln!("{}",e);
+                eprintln!("Notify failed{}",e);
                 false
             }
         };
