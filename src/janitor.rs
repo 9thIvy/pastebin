@@ -1,4 +1,4 @@
-use rocket::{fairing::{Fairing, Info, Kind}, Build, Rocket, Orbit};
+use rocket::{fairing::{Fairing, Info, Kind}, Rocket, Orbit};
 use std::{fs, path::PathBuf, time::SystemTime};
 use tokio::time::{self, Duration};
 use tokio::task;
