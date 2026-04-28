@@ -1,6 +1,7 @@
 #[macro_use] extern crate rocket;
 mod paste_id;
 mod janitor;
+mod systemd;
 use paste_id::PasteId;
 use rocket::tokio::fs::File;
 use rocket::data::{Data, ToByteUnit};
@@ -11,6 +12,7 @@ use rocket::data::{Data, ToByteUnit};
 #[launch]
 fn rocket() -> _ {
     rocket::build()
+        .attach(systemd::Sysd)
         .attach(janitor::Janitor)
         .mount("/", routes![index, retrieve, upload])
 }
