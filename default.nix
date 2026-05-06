@@ -10,7 +10,7 @@ pkgs.rustPlatform.buildRustPackage rec {
   buildPhase = ''
     mkdir -p $out/bin
     cargo build --release --locked
-    cp target/relase/${pname} $out/bin
+    cp target/release/${pname} $out/bin
   '';
 
   installPhase = ''
