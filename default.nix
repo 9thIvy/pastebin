@@ -7,6 +7,12 @@ pkgs.rustPlatform.buildRustPackage rec {
   cargoLock.lockFile = ./Cargo.lock;
   src = pkgs.lib.cleanSource ./.;
 
+  buildPhase = ''
+    mkdir $out/bin
+    cargo build --release --locked
+    cp target/relase/${pname} $out/bin
+  '';
+
   installPhase = ''
     mkdir -p $out/lib/systemd/system
     cat > $out/lib/systemd/system/${pname}.service <<'EOF'
