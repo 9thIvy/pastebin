@@ -12,7 +12,8 @@ impl<'a> PasteId<'_> {
     }
 
     pub fn file_path(&self) -> PathBuf {
-        let root = concat!(env!("CARGO_MANIFEST_DIR"), "/", "upload");
+        // todo: sync this so it and janitor always use same dir
+        let root = "/tmp/upload";
         let filename = self.0.to_string();
         Path::new(root).join(filename)
     }

@@ -15,6 +15,12 @@ impl Fairing for Janitor{
     }
 
     async fn on_liftoff(&self, _rocket: &Rocket<Orbit>){
+
+        match tokio::fs::create_dir("/tmp/upload").await {
+            Ok(r) => r,
+            Err(e) => eprintln!("{}",e),
+        }
+        
         task::spawn(async {
             rm_old_files().await;
         });
@@ -45,7 +51,7 @@ fn too_old(p: &std::path::PathBuf, now: u64) -> bool {
 }
 
 fn find_files() -> std::io::Result<Vec<std::path::PathBuf>> {
-    let paths = fs::read_dir("./upload")?
+    let paths = fs::read_dir("/tmp/upload")?
         .map(|res| res.map(|p| p.path()))
         .collect::<Result<Vec<_>, std::io::Error>>()?;
 
@@ -67,7 +73,7 @@ pub async fn rm_old_files() {
         let paths: Vec<PathBuf> = match task::spawn_blocking(||{
             match find_files(){
                 Ok(p) => p,
-                Err(e) => panic!("find_files error:\n{}",e)
+                Err(e) => panic!("find_files error:{}",e)
             }
         }).await{
             Ok(p) => p,
@@ -77,7 +83,7 @@ pub async fn rm_old_files() {
         for path in paths{
             match tokio::fs::remove_file(path).await{
                 Ok(_) => (),
-                Err(e) => eprintln!("cant remove file\n{}",e)
+                Err(e) => eprintln!("cant remove file{}",e)
             }
         }
     }
