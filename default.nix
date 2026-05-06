@@ -8,7 +8,7 @@ pkgs.rustPlatform.buildRustPackage rec {
   src = pkgs.lib.cleanSource ./.;
 
   buildPhase = ''
-    mkdir $out/bin
+    mkdir -p $out/bin
     cargo build --release --locked
     cp target/relase/${pname} $out/bin
   '';
