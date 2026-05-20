@@ -7,35 +7,17 @@ pkgs.rustPlatform.buildRustPackage rec {
   cargoLock.lockFile = ./Cargo.lock;
   src = pkgs.lib.cleanSource ./.;
 
+  nativeBuildInputs = [ pkgs.pkg-pkg-config pkgs.systemd pkgs.coreutils ];
+
   buildPhase = ''
-    mkdir -p $out/bin
     cargo build --release --locked
-    cp target/release/${pname} $out/bin
   '';
 
   installPhase = ''
+    mkdir -p $out/bin
+    cp target/release/${pname} $out/bin
+    
     mkdir -p $out/lib/systemd/system
-    cat > $out/lib/systemd/system/${pname}.service <<'EOF'
-
-[Unit]
-Description=Pineapple Pastebin
-After=network.target
-
-[Service]
-Type=notify
-ExecStart=${placeholder "out"}/bin/${pname}
-
-ExecReload=${pkgs.coreutils}/bin/kill -INT $MAINPID \
-    && ${placeholder "out"}/bin/${pname}
-
-    ExecStop=${pkgs.coreutils}/bin/kill -9 $MAINPID
-
-Restart=on-failure
-
-[Install]
-Wanted-By=multi-user.target
-
-EOF
   '';
 
 

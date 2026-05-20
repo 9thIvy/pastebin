@@ -1,15 +1,22 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs.url = "nixpkgs/nixos-25.05";
+    flake-parts.url = "github:hercules-ci/flake-parts";
   };
-  outputs = { self, nixpkgs }:
-  let 
-    supportedSystems = ["x86_64-linux"];
-    forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
-    pkgsFor = nixpkgs.legacyPackages;
-  in {
-  packages = forAllSystems (system: {
-    default = pkgsFor.${system}.callPackage ./default.nix { };
-  });
+
+  outputs = inputs @ {
+    self,
+    nixpkgs,
+    flake-parts,
+  }:
+  flake-parts.lib.mkFlake { inherit inputs; }
+  {
+    imports = [
+      ./default.nix
+      ./nix/nixos.nix
+      ./nix/package.nix
+    ];
   };
+
+  
 }
