@@ -16,6 +16,11 @@
       ./nix/nixos.nix
       ./nix/package.nix
     ];
+
+    overlays = {
+      pineapple_pastebin = import ./nix/overlay.nix;
+    };
+    
   };
 
   
