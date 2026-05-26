@@ -1,75 +1,63 @@
-# MIT code adapted from copyparty © ed oss@ocv.me
-{ config, lib, pkgs, ... }:
-let 
-  pname = "pineapple_pastebin";
+{ config, pkgs, lib, pineapple_pastebin, ... }:
+with lib;
+let
   cfg = config.services.pineapple_pastebin;
-
 in
 {
-  options.services.pineapple_pastebin = {
-    enable = lib.mkEnableOption "pineapple_pastebin service";
+  options.services.copyparty = {
+    enable = mkEnableOption "pastebin";
 
-    package = lib.mkPackageOption pkgs "pineapple_pastebin"{
-      extraDescription = ''
-        Package of the application to run, exposed for overriding purposes. 
-      '';
-    };
+    package = mkPackageOption pkgs "pineapple_pastebin";
 
-    user = lib.mkOption {
-      type = lib.types.str;
+    user = mkOption {
+      type = types.str;
       default = "pineapple_pastebin";
       description = ''
-        The user that pineapple_pastebin will run under.
-
-        If changed from default, you are responsible for making sure the user exists.
+        The user that pineapple_pastebin will run as.
       '';
     };
 
-    group = lib.mkOption {
-      type = lib.types.str;
+    group = mkOption {
+      type = types.str;
       default = "pineapple_pastebin";
       description = ''
-        The group that pineapple_pastebin will run under.
-
-        If changed from default, you are responsible for making sure the group exists.
+        The group that pineapple_pastebin will run as.
       '';
     };
-    
   };
- config = lib.mkIf cfg.enable (
-  let
-    command = "${lib.getExe cfg.package} -c $
-    {runtimeConfigPath}";
-  in {
-    systemd.services.pineapple_pastebin = {
-      description = "Pineapple Pastebin";
-      wantedBy = [ "multi-user.target" ];
-      after = [ "network.target" ];
-    };
 
-    lib.serviceConfig = {
-      type = "notify";
-      ExecStart = command;
-      User = cfg.user;
-      Group = cfg.group;
-      Restart = "on-failure";
-    };
+  config = mkIf cfg.enable (
+    let
 
-    users.groups = lib.mkIf (cfg.group == "pineapple_pastebin"){
-      pineapple_pastebin = { };
-    };
+    # probably ai garbage
+      usedPackage = if cfg.package == null then pineapple_pastebin else cfg.package;
+      command = "${getExe usedPackage}";
+    in {
+      systemd.services.pineapple_pastebin = {
+        wantedBy = [ "multi-user.target" ];
 
-    users.users = lib.mkIf (cfg.user == "pineapple_pastebin") {
-      pineapple_pastebin = {
-        description = "Service user of pineapple_pastebin";
-        group = cfg.group;
-        createHome = false;
-        isSystemUser = true;
+        serviceConfig = {
+          Type = "notify";
+          ExecStart = command;
+          User = cfg.user;
+          Group = cfg.group;
+          After = [ "network.target" ];
+        };
       };
-    };
-    
-  }
-    
-  
- );
+
+      environment.systemPackages = lib.mkIf (cfg.package == null) [ usedPackage ];
+
+      users.groups = lib.mkIf (cfg.group == "pineapple_pastebin" ){
+        pineapple_pastebin = { };
+      };
+
+      users.users = lib.mkIf (cfg.user == "pineapple_pastebin" ){
+        pineapple_pastebin = {
+          description = "pineapple_pastebin user";
+          group = cfg.group;
+          isSystemUser = true;
+        };
+      };
+    }
+  );
 }
